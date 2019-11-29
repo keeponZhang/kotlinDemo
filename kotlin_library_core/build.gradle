@@ -1,0 +1,43 @@
+apply plugin: 'org.jetbrains.kotlin.multiplatform'
+apply plugin: 'kotlinx-serialization'
+
+
+
+kotlin {
+    sourceSets {
+        commonMain.dependencies {
+            implementation deps.kotlin.stdlib.stdlib
+            implementation deps.kotlin.stdlib.jdk7
+            implementation deps.kotlin.serialiaztion.runtime.common
+            implementation deps.kotlin.coroutines.common
+        }
+
+
+        jvmMain.dependencies {
+            implementation deps.kotlin.stdlib.stdlib
+            implementation deps.kotlin.stdlib.jdk7
+            implementation deps.kotlin.serialiaztion.runtime.common
+            implementation deps.kotlin.coroutines.common
+        }
+        androidMain.dependencies {
+            implementation deps.kotlin.stdlib.stdlib
+            implementation deps.sqldelight.runtimejvm
+            implementation deps.kotlin.serialiaztion.runtime.runtime
+            implementation deps.kotlin.coroutines.android
+        }
+
+    }
+
+    targets {
+        fromPreset(presets.jvm, 'android')
+        final def iOSTarget = System.getenv('SDK_NAME')?.startsWith("iphoneos") \
+                              ? presets.iosArm64 : presets.iosX64
+
+    }
+}
+
+// workaround for https://youtrack.jetbrains.com/issue/KT-27170
+configurations {
+    compileClasspath
+}
+
