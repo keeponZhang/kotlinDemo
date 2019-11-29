@@ -1,8 +1,27 @@
 apply plugin: 'org.jetbrains.kotlin.multiplatform'
 apply plugin: 'kotlinx-serialization'
+apply plugin: 'com.android.library'
 
+android {
+    compileSdkVersion rootProject.ext.androidCompileSdkVersion
+    defaultConfig {
+        minSdkVersion rootProject.ext.androidMinSdkVersion
+        targetSdkVersion rootProject.ext.androidTargetSdkVersion
+        versionCode 1
+        versionName "1.0"
 
+        testInstrumentationRunner "android.support.test.runner.AndroidJUnitRunner"
 
+    }
+
+    buildTypes {
+        release {
+            minifyEnabled false
+            proguardFiles getDefaultProguardFile('proguard-android.txt'), 'proguard-rules.pro'
+        }
+    }
+
+}
 kotlin {
     sourceSets {
         commonMain.dependencies {
@@ -19,21 +38,20 @@ kotlin {
             implementation deps.kotlin.serialiaztion.runtime.common
             implementation deps.kotlin.coroutines.common
         }
-        androidMain.dependencies {
-            implementation deps.kotlin.stdlib.stdlib
-            implementation deps.sqldelight.runtimejvm
-            implementation deps.kotlin.serialiaztion.runtime.runtime
-            implementation deps.kotlin.coroutines.android
-        }
+
 
     }
 
     targets {
-        fromPreset(presets.jvm, 'android')
+        fromPreset(presets.jvm, 'jvm')
         final def iOSTarget = System.getenv('SDK_NAME')?.startsWith("iphoneos") \
                               ? presets.iosArm64 : presets.iosX64
 
     }
+    experimental {
+        coroutines "enable"
+    }
+
 }
 
 // workaround for https://youtrack.jetbrains.com/issue/KT-27170
