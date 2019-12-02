@@ -1,7 +1,8 @@
 package com.keepon.coroutines
 
+import com.keepon.coroutines.my.IMyInterceptor
+import com.keepon.coroutines.my.MyDispatcher
 import kotlinx.coroutines.*
-import kotlinx.coroutines.Dispatchers.Unconfined
 
 
 /**
@@ -14,19 +15,22 @@ fun main(args: Array<String>) {
 //    test2()
 
 //   test1()
-}
+    val myDispatcher = MyDispatcher()
 
+    println("myDispatcher "+myDispatcher)
+    println("  myDispatcher.key ="+  myDispatcher[IMyInterceptor])
+
+    println(IMyInterceptor.Key)
+    println(IMyInterceptor.Key)
+
+}
 fun test4() {
-    GlobalScope.launch { // 默认继承 parent coroutine 的 CoroutineDispatcher，运行commonPool
-        println("main runBlocking: I'm working in thread ${Thread.currentThread().name}")
-        delay(100)
-        println("main runBlocking: After delay in thread ${Thread.currentThread().name}")
-    }
-    GlobalScope.launch(Unconfined) {
-        println("Unconfined      : I'm working in thread ${Thread.currentThread().name}")
-        delay(100)
-        println("Unconfined      : After delay in thread ${Thread.currentThread().name}")
-    }
+
+//    GlobalScope.launch(Unconfined) {
+//        println("Unconfined      : I'm working in thread ${Thread.currentThread().name}")
+//        delay(100)
+//        println("Unconfined      : After delay in thread ${Thread.currentThread().name}")
+//    }
     Thread.sleep(1000)
 }
 

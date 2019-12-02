@@ -9,7 +9,26 @@ package kotlinx.coroutines
 
 import java.util.concurrent.locks.*
 import kotlin.coroutines.*
+import kotlinx.atomicfu.*
+import kotlinx.coroutines.internal.*
+import kotlinx.coroutines.intrinsics.*
+import kotlinx.coroutines.selects.*
+import kotlin.coroutines.*
+import kotlin.coroutines.intrinsics.*
+import kotlin.jvm.*
 
+public fun CoroutineScope.launch(
+        context: CoroutineContext = EmptyCoroutineContext,
+        start: CoroutineStart = CoroutineStart.DEFAULT,
+        block: suspend CoroutineScope.() -> Unit
+): Job {
+    val newContext = newCoroutineContext(context)
+    val coroutine = if (start.isLazy)
+        LazyStandaloneCoroutine(newContext, block) else
+        StandaloneCoroutine(newContext, active = true)
+    coroutine.start(start, coroutine, block)
+    return coroutine
+}
 /**
  * Runs a new coroutine and **blocks** the current thread _interruptibly_ until its completion.
  * This function should not be used from a coroutine. It is designed to bridge regular blocking code
