@@ -13,18 +13,20 @@ suspend fun main() {
 //    test12()
 
 //    test13()
-    test14()
-
+//    test14()
+//    test15()
+//    test16()
+    test17()
 
 }
 
 
 
-private suspend fun test12() {
-    val exceptionHandler = CoroutineExceptionHandler { coroutineContext, throwable ->
-        log("Throws an exception with message: ${throwable.message}")
-    }
+val exceptionHandler = CoroutineExceptionHandler { coroutineContext, throwable ->
+    log("Throws an exception with message: ${throwable.message}")
+}
 
+private suspend fun test12() {
     log(1)
     GlobalScope.launch(exceptionHandler) {
         throw ArithmeticException("Hey!")
@@ -264,6 +266,146 @@ at kotlinx.coroutines.scheduling.CoroutineScheduler$Worker.run(CoroutineSchedule
 //我们可以看到，1-8 的输出其实没有本质区别，顺序上的差异是线程调度的前后造成的，并不会影响协程的语义。
 //差别主要在于 9 与 10、11与12的区别，如果把 scope 换成 supervisorScope，我们发现 ③
 //的异常并没有影响作用域以及作用域内的其他子协程的执行，也就是我们所说的“自作自受”。
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+suspend fun test15() {
+    log(1)
+    try {
+        supervisorScope()
+        { //①
+            log(2)
+            launch (exceptionHandler+ CoroutineName("②")){ // ②
+                log(3)
+                launch (exceptionHandler+ CoroutineName("③")){ // ③
+                    log(4)
+                    delay(100)
+                    throw ArithmeticException("Hey!!")
+                }
+                log(5)
+            }
+            log(6)
+            val job = launch { // ④
+                try {
+                    log(7)
+                    delay(1000)
+
+                }catch (e: Exception ){
+                    log("@4 exception. $e")
+                }
+                //注释掉这里不会有10,如果把前面③里面的delay也注释掉，会调用，所以还是结论那个原因
+            }
+            try {
+                log(8)
+                job.join()
+                log("9")
+            } catch (e: Exception) {
+                log("10. $e")
+            }
+        }
+        log(11)
+    } catch (e: Exception) {
+        log("12. $e")
+    }
+    log(13)
+}
+
+
+/*我们发现触发的 CoroutineExceptionHandler 竟然是协程 ② 的，意外吗？不意外，因为我们前面已经提到，
+对于 supervisorScope 的子协程 （例如 ②）的子协程（例如 ③），如果没有明确指出，它是遵循默认的作用于规则的，
+也就是 coroutineScope 的规则了，出现未捕获的异常会尝试传递给父协程并尝试取消父协程。
+
+
+究竟使用什么 Scope，大家自己根据实际情况来确定，我给出一些建议：
+
+对于没有协程作用域，但需要启动协程的时候，适合用 GlobalScope
+对于已经有协程作用域的情况（例如通过 GlobalScope 启动的协程体内），直接用协程启动器启动
+对于明确要求子协程之间相互独立不干扰时，使用 supervisorScope
+对于通过标准库 API 创建的协程，这样的协程比较底层，没有 Job、作用域等概念的支撑，例如我们前面提到过 suspend main 就是这种情况，对于这种情况优先考虑通过 coroutineScope 创建作用域；更进一步，大家尽量不要直接使用标准库 API，除非你对 Kotlin 的协程机制非常熟悉。
+当然，对于可能出异常的情况，请大家尽量做好异常处理，不要将问题复杂化。*/
+
+
+suspend fun test16() {
+    //
+    val deferred = GlobalScope.async<Int> {
+        throw ArithmeticException()
+    }
+    try {
+        val value = deferred.await()
+        log("1. $value")
+    } catch (e: Exception) {
+        log("2. $e")
+    }
+
+
+}
+
+//async 和 produce 则主要是用来输出结果的，他们内部的异常只在外部消费他们的结果时抛出。
+//这两组协程的启动器，你也可以认为分别是“消费者”和“生产者”，消费者异常立即抛出，生产者只有结果消费时抛出异常。
+//
+//
+//相比之下，join 就有趣的多了，它只关注是否执行完，至于是因为什么完成，它不关心，因此如果我们在这里替换成 join：
+suspend fun test17() {
+    //
+    val deferred = GlobalScope.async<Int> {
+        throw ArithmeticException()
+    }
+    try {
+        val value = deferred.join()
+        log("1. $value")
+    } catch (e: Exception) {
+        log("2. $e")
+    }
+}
+//我们就会发现，异常被吞掉了！
+//
+//13:26:15:034 [main] 1
+//
+//如果例子当中我们用 launch 替换 async，join 处仍然不会有任何异常抛出，还是那句话，
+//它只关心有没有完成，至于怎么完成的它不关心。不同之处在于， launch 中未捕获的异常与 async 的处理方式不同，
+//launch 会直接抛出给父协程，如果没有父协程（顶级作用域中）或者处于 supervisorScope 中父协程不响应，
+//那么就交给上下文中指定的 CoroutineExceptionHandler处理，如果没有指定，那传给全局的 CoroutineExceptionHandler 等等，
+//而 async 则要等 await 来消费。
+//
+//不管是哪个启动器，在应用了作用域之后，都会按照作用域的语义进行异常扩散，进而触发相应的取消操作，
+//对于 async 来说就算不调用 await 来获取这个异常，它也会在 coroutineScope 当中触发父协程的取消逻辑，这一点请大家注意。
+
+
+
+
+//6. 小结
+//这一篇我们讲了协程的异常处理。这一块儿稍微显得有点儿复杂，但仔细理一下主要有三条线：
+//
+//1.协程内部异常处理流程：launch 会在内部出现未捕获的异常时尝试触发对父协程的取消，
+//    能否取消要看作用域的定义，如果取消成功，那么异常传递给父协程，否则传递给启动时上下文中配置的 CoroutineExceptionHandler 中，
+//    如果没有配置，会查找全局（JVM上）的 CoroutineExceptionHandler 进行处理，如果仍然没有，那么就将异常交给当前线程的 UncaughtExceptionHandler 处理；
+//    而 async 则在未捕获的异常出现时同样会尝试取消父协程，但不管是否能够取消成功都不会后其他后续的异常处理，直到用户主动调用 await 时将异常抛出。
+//2.异常在作用域内的传播：当协程出现异常时，会根据当前作用域触发异常传递，GlobalScope 会创建一个独立的作用域，
+//    所谓“自成一派”，而 在 coroutineScope 当中协程异常会触发父协程的取消，进而将整个协程作用域取消掉，如果对 coroutineScope
+//    整体进行捕获，也可以捕获到该异常，所谓“一损俱损”；如果是 supervisorScope，那么子协程的异常不会向上传递，所谓“自作自受”。
+//3.join 和 await 的不同：join 只关心协程是否执行完，await 则关心运行的结果，因此 join 在协程出现异常时也不会抛出该异常，
+//    而 await 则会；考虑到作用域的问题，如果协程抛异常，可能会导致父协程的取消，因此调用 join 时尽管不会对协程本身的异常进行抛出，
+//    但如果 join 调用所在的协程被取消，那么它会抛出取消异常，这一点需要留意。如果大家能把这三点理解清楚了，那么协程的异常处理可以说就非常清晰了。
+//    文中因为异常传播的原因，我们提到了取消，但没有展开详细讨论，后面我们将会专门针对取消输出一篇文章，帮助大家加深理解。
+
+
+
+
+
+
+
+
 
 
 

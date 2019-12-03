@@ -66,6 +66,48 @@ fun postItem4(item: String) {
 //    }
 //}
 
+//SuspendLambda -> ContinuationImpl -> BaseContinuationImpl -> Continuation，其中BaseContinuationImpl部分关键源码如下：
+//
+//internal abstract class BaseContinuationImpl(...) {
+//    // 实现 Continuation 的 resumeWith，并且是 final 的，不可被重写
+//    public final override fun resumeWith(result: Result<Any?>) {
+//        ...
+//        val outcome = invokeSuspend(param)
+//        ...
+//    }
+//
+//    // 由编译生成的协程相关类来实现，例如 postItem$1
+//    protected abstract fun invokeSuspend(result: Result<Any?>): Any?
+//}
+//而这部分与之前的分析也是吻合的，启动协程流程是resume(Unit)->resumeWith()->invokeSuspend()，
+//协程的挂起通过suspend挂起函数实现，协程的恢复通过Continuation.resumeWith实现。
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 //上面代码中每一个挂起点和初始挂起点对应的 Continuation 都会转化为一种状态，协程恢复只是跳转到下一种状态中。挂起函数将执行过程分为多个 Continuation 片段，
 //并且利用状态机的方式保证各个片段是顺序执行的。
 

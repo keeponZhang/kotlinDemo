@@ -1,7 +1,5 @@
 package com.keepon.coroutines
 
-import com.keepon.coroutines.my.IMyInterceptor
-import com.keepon.coroutines.my.MyDispatcher
 import kotlinx.coroutines.*
 
 
@@ -9,19 +7,20 @@ import kotlinx.coroutines.*
  * createBy	 keepon
  */
 fun main(args: Array<String>) {
-    test4()
+//    test4()
 //    test3()
 
 //    test2()
 
-//   test1()
-    val myDispatcher = MyDispatcher()
-
-    println("myDispatcher "+myDispatcher)
-    println("  myDispatcher.key ="+  myDispatcher[IMyInterceptor])
-
-    println(IMyInterceptor.Key)
-    println(IMyInterceptor.Key)
+    postItem2("keepon")
+//  test1()
+//    val myDispatcher = MyDispatcher()
+//
+//    println("myDispatcher "+myDispatcher)
+//    println("  myDispatcher.key ="+  myDispatcher[IMyInterceptor])
+//
+//    println(IMyInterceptor.Key)
+//    println(IMyInterceptor.Key)
 
 }
 fun test4() {
@@ -76,3 +75,4 @@ private fun test1() {
     }
     Thread.sleep(3000)
 }
+

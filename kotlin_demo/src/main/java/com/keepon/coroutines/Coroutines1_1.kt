@@ -83,22 +83,25 @@ fun postItem1(item: String) {
 
 fun requestTokenAsync2(cb: (Token) -> Unit) {
     println("getToken2")
+    cb.invoke(Token())
 }
 fun createPostAsync2(token: Token, item: String, cb: (Post) -> Unit) {
     println("通过token拿post2")
+
+    cb.invoke(Post())
 }
 fun processPost2(post: Post) {
     println("处理post2")
 }
 
 fun postItem2(item: String) {
-    val myToken = Token()
-    requestTokenAsync2 { myToken ->
-        println("-----")
-        createPostAsync2(myToken, item) { post ->
+    //方法参数在定义时就确定了，这里用it或者token都一样
+    requestTokenAsync2 { it ->
+        createPostAsync2(it, item) { post ->
             processPost2(post)
         }
     }
+    Thread.sleep(1000)
 }
 
 
