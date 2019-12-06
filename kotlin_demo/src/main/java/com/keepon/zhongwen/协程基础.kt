@@ -1,4 +1,4 @@
-package com.keepon.zhongwen
+package com.keepon.zhongwen.协程基础
 
 import com.keepon.coroutines.utils.log
 import kotlinx.coroutines.CoroutineScope
@@ -14,6 +14,8 @@ import kotlinx.coroutines.withTimeoutOrNull
 /**
  * createBy	 keepon
  */
+
+//https://www.kotlincn.net/docs/reference/coroutines/coroutine-context-and-dispatchers.html
 /*fun main() {
 //    你的第一个协程程序()
 //    桥接阻塞与非阻塞的世界()
