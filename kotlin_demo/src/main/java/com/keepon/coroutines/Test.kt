@@ -1,7 +1,10 @@
 package com.keepon.coroutines
 
-import kotlinx.coroutines.*
-
+import kotlinx.coroutines.GlobalScope
+import kotlinx.coroutines.async
+import kotlinx.coroutines.delay
+import kotlinx.coroutines.launch
+import kotlinx.coroutines.newSingleThreadContext
 
 /**
  * createBy	 keepon
@@ -21,8 +24,8 @@ fun main(args: Array<String>) {
 //
 //    println(IMyInterceptor.Key)
 //    println(IMyInterceptor.Key)
-
 }
+
 fun test4() {
 
 //    GlobalScope.launch(Unconfined) {
@@ -37,23 +40,23 @@ fun test3() {
     val coroutineDispatcher = newSingleThreadContext("ctx")
     // 启动协程 1
     GlobalScope.launch(coroutineDispatcher) {
-        println("the first coroutine "+Thread.currentThread().name)
+        println("the first coroutine " + Thread.currentThread().name)
         delay(200)
-        println("the first coroutine "+Thread.currentThread().name)
+
+        println("the first coroutine " + Thread.currentThread().name)
     }
     // 启动协程 2
     GlobalScope.launch(coroutineDispatcher) {
-        println("the second coroutine "+Thread.currentThread().name)
+        println("the second coroutine " + Thread.currentThread().name)
         delay(100)
-        println("the second coroutine "+Thread.currentThread().name)
+        println("the second coroutine " + Thread.currentThread().name)
     }
     // 保证 main 线程存活，确保上面两个协程运行完成
     Thread.sleep(500)
 }
 
-
 fun test2() {
-    GlobalScope. launch {
+    GlobalScope.launch {
         //async { requestToken0() } //新建一个协程，可能在另一个线程运行
         // 但是 await() 是挂起函数，当前协程执行逻辑卡在第一个分支，第一种状态，当 async 的协程执行完后恢复当前协程，才会切换到下一个分支
         //在这里调用await没什么优势，但是await()可以在下面调用
@@ -68,7 +71,7 @@ fun test2() {
 }
 
 private fun test1() {
-    GlobalScope. launch {
+    GlobalScope.launch {
         val token = requestToken0()
         val post = createPost0(token, "keepn")
         processPost0(post)
