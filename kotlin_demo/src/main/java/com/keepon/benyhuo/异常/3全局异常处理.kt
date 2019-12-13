@@ -3,6 +3,7 @@ package com.keepon.benyhuo.异常3全局异常处理.kt
 import com.keepon.coroutines.utils.log
 import kotlinx.coroutines.CoroutineExceptionHandler
 import kotlinx.coroutines.GlobalScope
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 
 /**
@@ -15,6 +16,7 @@ import kotlinx.coroutines.launch
 
     log(1)
     GlobalScope.launch(exceptionHandler) {
+        delay(10)
         throw ArithmeticException("Hey!")
     }.join()
     log(2)
